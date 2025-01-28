@@ -25,68 +25,23 @@ describe('utils tests', () => {
     expect(array2.length).toEqual(0)
   })
 
+  test('stripOrgPrefixFromTeams strips org prefixes correctly', async () => {
+    const array = utils.stripOrgPrefixFromTeams([
+      'org/team1',
+      'org/team2',
+      'team3'
+    ])
+    expect(array.length).toEqual(3)
+    expect(array[0]).toEqual('team1')
+    expect(array[1]).toEqual('team2')
+    expect(array[2]).toEqual('team3')
+  })
+
   test('getRepoPath successfully returns the path to the repository', async () => {
     expect(utils.getRepoPath()).toEqual(process.env['GITHUB_WORKSPACE'])
     expect(utils.getRepoPath('foo')).toEqual(
       path.resolve(process.env['GITHUB_WORKSPACE'] || '', 'foo')
     )
-  })
-
-  test('getRemoteDetail successfully parses remote URLs', async () => {
-    const remote1 = utils.getRemoteDetail(
-      'https://github.com/peter-evans/create-pull-request'
-    )
-    expect(remote1.protocol).toEqual('HTTPS')
-    expect(remote1.repository).toEqual('peter-evans/create-pull-request')
-
-    const remote2 = utils.getRemoteDetail(
-      'https://xxx:x-oauth-basic@github.com/peter-evans/create-pull-request'
-    )
-    expect(remote2.protocol).toEqual('HTTPS')
-    expect(remote2.repository).toEqual('peter-evans/create-pull-request')
-
-    const remote3 = utils.getRemoteDetail(
-      'git@github.com:peter-evans/create-pull-request.git'
-    )
-    expect(remote3.protocol).toEqual('SSH')
-    expect(remote3.repository).toEqual('peter-evans/create-pull-request')
-
-    const remote4 = utils.getRemoteDetail(
-      'https://github.com/peter-evans/create-pull-request.git'
-    )
-    expect(remote4.protocol).toEqual('HTTPS')
-    expect(remote4.repository).toEqual('peter-evans/create-pull-request')
-
-    const remote5 = utils.getRemoteDetail(
-      'https://github.com/peter-evans/ungit'
-    )
-    expect(remote5.protocol).toEqual('HTTPS')
-    expect(remote5.repository).toEqual('peter-evans/ungit')
-
-    const remote6 = utils.getRemoteDetail(
-      'https://github.com/peter-evans/ungit.git'
-    )
-    expect(remote6.protocol).toEqual('HTTPS')
-    expect(remote6.repository).toEqual('peter-evans/ungit')
-
-    const remote7 = utils.getRemoteDetail(
-      'git@github.com:peter-evans/ungit.git'
-    )
-    expect(remote7.protocol).toEqual('SSH')
-    expect(remote7.repository).toEqual('peter-evans/ungit')
-  })
-
-  test('getRemoteDetail fails to parse a remote URL', async () => {
-    const remoteUrl = 'https://github.com/peter-evans'
-    try {
-      utils.getRemoteDetail(remoteUrl)
-      // Fail the test if an error wasn't thrown
-      expect(true).toEqual(false)
-    } catch (e: any) {
-      expect(e.message).toEqual(
-        `The format of '${remoteUrl}' is not a valid GitHub repository URL`
-      )
-    }
   })
 
   test('getRemoteUrl successfully returns remote URLs', async () => {

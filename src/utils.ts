@@ -16,6 +16,16 @@ export function getStringAsArray(str: string): string[] {
     .filter(x => x !== '')
 }
 
+export function stripOrgPrefixFromTeams(teams: string[]): string[] {
+  return teams.map(team => {
+    const slashIndex = team.lastIndexOf('/')
+    if (slashIndex > 0) {
+      return team.substring(slashIndex + 1)
+    }
+    return team
+  })
+}
+
 export function getRepoPath(relativePath?: string): string {
   let githubWorkspacePath = process.env['GITHUB_WORKSPACE']
   if (!githubWorkspacePath) {
@@ -29,53 +39,6 @@ export function getRepoPath(relativePath?: string): string {
 
   core.debug(`repoPath: ${repoPath}`)
   return repoPath
-}
-
-interface RemoteDetail {
-  hostname: string
-  protocol: string
-  repository: string
-}
-
-export function getRemoteDetail(remoteUrl: string): RemoteDetail {
-  // Parse the protocol and github repository from a URL
-  // e.g. HTTPS, peter-evans/create-pull-request
-  const githubUrl = process.env['GITHUB_SERVER_URL'] || 'https://github.com'
-
-  const githubServerMatch = githubUrl.match(/^https?:\/\/(.+)$/i)
-  if (!githubServerMatch) {
-    throw new Error('Could not parse GitHub Server name')
-  }
-
-  const hostname = githubServerMatch[1]
-
-  const httpsUrlPattern = new RegExp(
-    '^https?://.*@?' + hostname + '/(.+/.+?)(\\.git)?$',
-    'i'
-  )
-  const sshUrlPattern = new RegExp('^git@' + hostname + ':(.+/.+)\\.git$', 'i')
-
-  const httpsMatch = remoteUrl.match(httpsUrlPattern)
-  if (httpsMatch) {
-    return {
-      hostname,
-      protocol: 'HTTPS',
-      repository: httpsMatch[1]
-    }
-  }
-
-  const sshMatch = remoteUrl.match(sshUrlPattern)
-  if (sshMatch) {
-    return {
-      hostname,
-      protocol: 'SSH',
-      repository: sshMatch[1]
-    }
-  }
-
-  throw new Error(
-    `The format of '${remoteUrl}' is not a valid GitHub repository URL`
-  )
 }
 
 export function getRemoteUrl(
@@ -157,6 +120,20 @@ export function fileExistsSync(path: string): boolean {
   }
 
   return false
+}
+
+export function readFile(path: string): string {
+  return fs.readFileSync(path, 'utf-8')
+}
+
+export function readFileBase64(pathParts: string[]): string {
+  const resolvedPath = path.resolve(...pathParts)
+  if (fs.lstatSync(resolvedPath).isSymbolicLink()) {
+    return fs
+      .readlinkSync(resolvedPath, {encoding: 'buffer'})
+      .toString('base64')
+  }
+  return fs.readFileSync(resolvedPath).toString('base64')
 }
 
 /* eslint-disable  @typescript-eslint/no-explicit-any */
